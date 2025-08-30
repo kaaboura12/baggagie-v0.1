@@ -458,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 trip.packingLists.isNotEmpty 
                                     ? '${trip.packingLists.first.packedItems}/${trip.packingLists.first.totalItems} packed'
-                                    : 'No packing list',
+                                    : 'No packing list (${trip.packingLists.length})',
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.8),
                                   fontSize: 14,

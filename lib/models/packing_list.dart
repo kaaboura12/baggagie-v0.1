@@ -17,12 +17,14 @@ class PackingList {
 
   factory PackingList.fromJson(Map<String, dynamic> json) {
     return PackingList(
-      id: json['id'] as String,
-      travelId: json['travel_id'] as String,
-      name: json['name'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      items: json['items'] != null
-          ? (json['items'] as List)
+      id: json['id']?.toString() ?? '',
+      travelId: json['travel_id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'].toString())
+          : DateTime.now(),
+      items: json['packing_items'] != null
+          ? (json['packing_items'] as List)
               .map((item) => PackingItem.fromJson(item as Map<String, dynamic>))
               .toList()
           : [],

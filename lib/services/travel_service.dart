@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/travel.dart';
 import '../models/travel_activity.dart';
 import '../models/activity.dart';
+import '../models/packing_list.dart';
 
 class TravelService {
   static final SupabaseClient _supabase = Supabase.instance.client;
@@ -72,6 +73,11 @@ class TravelService {
             purpose:trip_purposes(*),
             activities:travel_activities(
               activity:activities(*)
+            ),
+            packing_lists:packing_lists(
+              *,
+              packing_items(*)
+
             )
           ''')
           .eq('user_id', userId)
@@ -92,7 +98,22 @@ class TravelService {
                 .toList()
             : <Activity>[];
 
-        return Travel.fromJson(json).copyWith(activities: activities);
+        // Transform the nested packing lists structure
+        final packingLists = json['packing_lists'] != null
+            ? (json['packing_lists'] as List)
+                .map((pl) => PackingList.fromJson(pl as Map<String, dynamic>))
+                .toList()
+            : <PackingList>[];
+
+        print('Travel ${json['destination']}: Found ${packingLists.length} packing lists');
+        if (packingLists.isNotEmpty) {
+          print('First packing list: ${packingLists.first.name} with ${packingLists.first.items.length} items');
+        }
+
+        return Travel.fromJson(json).copyWith(
+          activities: activities,
+          packingLists: packingLists,
+        );
       }).toList();
     } catch (e) {
       print('Error fetching user travels: $e');

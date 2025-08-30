@@ -15,11 +15,13 @@ class PackingItem {
 
   factory PackingItem.fromJson(Map<String, dynamic> json) {
     return PackingItem(
-      id: json['id'] as String,
-      packingListId: json['packing_list_id'] as String,
-      name: json['name'] as String,
+      id: json['id']?.toString() ?? '',
+      packingListId: json['packing_list_id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
       isPacked: json['is_packed'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'].toString())
+          : DateTime.now(),
     );
   }
 
