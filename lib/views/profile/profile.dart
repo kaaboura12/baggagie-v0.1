@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/travel_controller.dart';
+import '../../models/travel.dart';
 import '../../widgets/blurred_background.dart';
 import '../../widgets/glassmorphism_card.dart';
 import '../../widgets/glassmorphism_input.dart';
@@ -39,6 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.initState();
     _initializeAnimations();
     _loadUserData();
+    _loadUserTravels();
   }
 
   void _initializeAnimations() {
@@ -76,6 +79,68 @@ class _ProfileScreenState extends State<ProfileScreen>
       _bioController.text = ''; // Bio not available in current User model
       _phoneController.text = ''; // Phone not available in current User model
     }
+  }
+
+  void _loadUserTravels() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authController = Provider.of<AuthController>(context, listen: false);
+      final travelController = Provider.of<TravelController>(context, listen: false);
+      
+      if (authController.currentUser != null) {
+        travelController.loadUserTravels(authController.currentUser!.id);
+      }
+    });
+  }
+
+  Map<String, int> _calculateTravelStats(List<Travel> travels) {
+    if (travels.isEmpty) {
+      return {
+        'totalTrips': 0,
+        'uniqueCountries': 0,
+        'uniqueCities': 0,
+        'totalDays': 0,
+        'upcomingTrips': 0,
+        'completedTrips': 0,
+      };
+    }
+
+    // Calculate unique countries and cities
+    final countries = <String>{};
+    final cities = <String>{};
+    int totalDays = 0;
+    int upcomingTrips = 0;
+    int completedTrips = 0;
+
+    for (final travel in travels) {
+      // Extract country from destination (assuming format like "Paris, France" or "Tokyo, Japan")
+      final destinationParts = travel.destination.split(',');
+      if (destinationParts.length > 1) {
+        final country = destinationParts.last.trim();
+        countries.add(country);
+      }
+      
+      // Add destination as city
+      cities.add(travel.destination);
+      
+      // Sum total days
+      totalDays += travel.durationDays;
+      
+      // Count trip status
+      if (travel.isUpcoming) {
+        upcomingTrips++;
+      } else if (travel.isPast) {
+        completedTrips++;
+      }
+    }
+
+    return {
+      'totalTrips': travels.length,
+      'uniqueCountries': countries.length,
+      'uniqueCities': cities.length,
+      'totalDays': totalDays,
+      'upcomingTrips': upcomingTrips,
+      'completedTrips': completedTrips,
+    };
   }
 
   void _onNavTap(int index) {
@@ -503,54 +568,90 @@ class _ProfileScreenState extends State<ProfileScreen>
           
           const SizedBox(height: 16),
           
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  'Trips',
-                  '12',
-                  Icons.flight_takeoff,
-                  const Color(0xFF6C5CE7),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  'Countries',
-                  '8',
-                  Icons.public,
-                  const Color(0xFFE17055),
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  'Cities',
-                  '24',
-                  Icons.location_city,
-                  const Color(0xFF00B894),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  'Days',
-                  '156',
-                  Icons.calendar_today,
-                  const Color(0xFFE84393),
-                ),
-              ),
-            ],
+          Consumer<TravelController>(
+            builder: (context, travelController, child) {
+              final stats = _calculateTravelStats(travelController.travels);
+              
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          'Total Trips',
+                          stats['totalTrips'].toString(),
+                          Icons.flight_takeoff,
+                          const Color(0xFF6C5CE7),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          'Countries',
+                          stats['uniqueCountries'].toString(),
+                          Icons.public,
+                          const Color(0xFFE17055),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          'Cities',
+                          stats['uniqueCities'].toString(),
+                          Icons.location_city,
+                          const Color(0xFF00B894),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          'Total Days',
+                          stats['totalDays'].toString(),
+                          Icons.calendar_today,
+                          const Color(0xFFE84393),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          'Upcoming',
+                          stats['upcomingTrips'].toString(),
+                          Icons.schedule,
+                          const Color(0xFF6C5CE7),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          'Completed',
+                          stats['completedTrips'].toString(),
+                          Icons.check_circle,
+                          const Color(0xFF00B894),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
