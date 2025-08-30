@@ -84,14 +84,14 @@ class PackingController extends ChangeNotifier {
       PackingList? parentList;
       
       for (final list in _packingLists) {
-        final foundItem = list.items.firstWhere(
-          (i) => i.id == itemId,
-          orElse: () => throw StateError('Item not found'),
-        );
-        if (foundItem.id == itemId) {
+        try {
+          final foundItem = list.items.firstWhere((i) => i.id == itemId);
           item = foundItem;
           parentList = list;
           break;
+        } catch (e) {
+          // Item not found in this list, continue to next list
+          continue;
         }
       }
 
@@ -101,10 +101,12 @@ class PackingController extends ChangeNotifier {
       }
 
       // Update the item status
+      print('Toggling item ${item.name} from ${item.isPacked} to ${!item.isPacked}');
       final updatedItem = await PackingService.updatePackingItemStatus(
         itemId,
         !item.isPacked,
       );
+      print('Updated item: ${updatedItem.name}, isPacked: ${updatedItem.isPacked}');
 
       // Update local state
       final listIndex = _packingLists.indexWhere((pl) => pl.id == parentList!.id);
@@ -114,6 +116,7 @@ class PackingController extends ChangeNotifier {
         if (itemIndex != -1) {
           updatedItems[itemIndex] = updatedItem;
           _packingLists[listIndex] = _packingLists[listIndex].copyWith(items: updatedItems);
+          print('Updated local state. List now has ${_packingLists[listIndex].items.length} items');
           notifyListeners();
         }
       }
@@ -270,8 +273,11 @@ class PackingController extends ChangeNotifier {
   /// Get packing list by ID
   PackingList? getPackingListById(String id) {
     try {
-      return _packingLists.firstWhere((pl) => pl.id == id);
+      final packingList = _packingLists.firstWhere((pl) => pl.id == id);
+      print('Found packing list ${packingList.id} with ${packingList.items.length} items');
+      return packingList;
     } catch (e) {
+      print('Packing list $id not found in local lists');
       return null;
     }
   }

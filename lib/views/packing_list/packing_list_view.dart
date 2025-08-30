@@ -96,6 +96,8 @@ class _PackingListViewState extends State<PackingListView>
                       builder: (context, packingController, child) {
                         final currentPackingList = packingController.getPackingListById(widget.packingList.id);
                         final items = currentPackingList?.items ?? widget.packingList.items;
+                        
+                        print('PackingListView: Found ${items.length} items, ${items.where((i) => i.isPacked).length} packed');
 
                         return SingleChildScrollView(
                           padding: const EdgeInsets.all(20),
