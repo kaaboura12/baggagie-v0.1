@@ -1,11 +1,11 @@
 {
-    "name": "baggagie",
-    "short_name": "baggagie",
+    "name": "Baggagie",
+    "short_name": "Baggagie",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#2196F3",
+    "theme_color": "#2196F3",
+    "description": "Smart travel packing assistant powered by AI.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
