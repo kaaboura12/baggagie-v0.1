@@ -78,11 +78,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           // Beautiful Header with Logo and Profile
                           _buildHeader(context, user),
                           
-                          const SizedBox(height: 24),
-                          
-                          // Creative Search Bar
-                          _buildSearchBar(context),
-                          
                           const SizedBox(height: 32),
                           
                           // User's Trips Section
@@ -128,44 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      child: GlassmorphismCard(
-        child: Row(
-          children: [
-            Icon(
-              Icons.search,
-              color: Colors.white.withOpacity(0.8),
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Where do you want to go?',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.tune,
-                color: Colors.white.withOpacity(0.8),
-                size: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildUserTrips(BuildContext context, AuthController authController) {
     return Consumer<TravelController>(
