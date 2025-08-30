@@ -66,6 +66,7 @@ flutter:
     - lib/public/assets/logo.png
     - lib/public/assets/background.png
     - lib/public/assets/.env
+    - lib/public/screenshots/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

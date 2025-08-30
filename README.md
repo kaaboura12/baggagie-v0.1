@@ -14,6 +14,32 @@
 
 ---
 
+## 📸 Screenshots
+
+<div align="center">
+
+### 🚀 Splash Screen
+<img src="lib/public/screenshots/splashscreen.png" alt="Baggagie Splash Screen" width="300"/>
+
+### 🏠 Home & Trip List
+<img src="lib/public/screenshots/triplist.png" alt="Trip List Screen" width="300"/>
+
+### ✈️ New Trip Creation
+<img src="lib/public/screenshots/newtrippage.png" alt="New Trip Screen" width="300"/>
+
+### 📦 AI-Powered Packing List
+<img src="lib/public/screenshots/packinglist.png" alt="Packing List Screen" width="300"/>
+
+### 👤 User Profile & Statistics
+<img src="lib/public/screenshots/profilepage2.png" alt="Profile Page" width="300"/>
+
+### 📊 Travel Statistics
+<img src="lib/public/screenshots/profilstatic.png" alt="Profile Statistics" width="300"/>
+
+</div>
+
+---
+
 </div>
 
 ## 🌟 Overview
