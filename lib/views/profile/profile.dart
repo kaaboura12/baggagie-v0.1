@@ -30,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _bioController = TextEditingController();
+
   final _phoneController = TextEditingController();
 
   bool _isEditing = false;
@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (user != null) {
       _fullNameController.text = user.fullName ?? '';
       _emailController.text = user.email ?? '';
-      _bioController.text = ''; // Bio not available in current User model
+
       _phoneController.text = ''; // Phone not available in current User model
     }
   }
@@ -179,7 +179,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       // Update user data (this would be your actual update logic)
       // await authController.updateProfile(
       //   fullName: _fullNameController.text.trim(),
-      //   bio: _bioController.text.trim(),
       //   phone: _phoneController.text.trim(),
       // );
 
@@ -217,7 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _animationController.dispose();
     _fullNameController.dispose();
     _emailController.dispose();
-    _bioController.dispose();
+
     _phoneController.dispose();
     super.dispose();
   }
@@ -518,16 +517,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               
               const SizedBox(height: 16),
               
-              // Bio
-              GlassmorphismInput(
-                controller: _bioController,
-                labelText: 'Bio',
-                hintText: 'Tell us about yourself',
-                prefixIcon: Icons.info_outline,
-                enabled: _isEditing,
-                maxLines: 3,
-              ),
-              
+
               if (_isEditing) ...[
                 const SizedBox(height: 24),
                 
