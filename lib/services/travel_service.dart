@@ -81,9 +81,12 @@ class TravelService {
         // Transform the nested activities structure
         final activities = json['activities'] != null
             ? (json['activities'] as List)
-                .map((ta) => ta['activity'] != null 
-                    ? Activity.fromJson(ta['activity'])
-                    : null)
+                .map((ta) {
+                  if (ta is Map<String, dynamic> && ta['activity'] != null) {
+                    return Activity.fromJson(ta['activity'] as Map<String, dynamic>);
+                  }
+                  return null;
+                })
                 .where((a) => a != null)
                 .cast<Activity>()
                 .toList()

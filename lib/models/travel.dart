@@ -35,15 +35,23 @@ class Travel {
 
   factory Travel.fromJson(Map<String, dynamic> json) {
     return Travel(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      destination: json['destination'] as String,
-      startDate: DateTime.parse(json['start_date'] as String),
-      endDate: DateTime.parse(json['end_date'] as String),
-      durationDays: json['duration_days'] as int,
-      purposeId: json['purpose_id'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: json['id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      destination: json['destination']?.toString() ?? '',
+      startDate: json['start_date'] != null 
+          ? DateTime.parse(json['start_date'].toString())
+          : DateTime.now(),
+      endDate: json['end_date'] != null 
+          ? DateTime.parse(json['end_date'].toString())
+          : DateTime.now(),
+      durationDays: json['duration_days'] ?? 0,
+      purposeId: json['purpose_id']?.toString(),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'].toString())
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at'].toString())
+          : DateTime.now(),
       purpose: json['purpose'] != null 
           ? TripPurpose.fromJson(json['purpose'] as Map<String, dynamic>)
           : null,

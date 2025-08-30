@@ -2,12 +2,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/travel_controller.dart';
+import '../../models/travel.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/blurred_background.dart';
 import '../../widgets/glassmorphism_card.dart';
 import '../../widgets/glassmorphism_input.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/glassmorphism_nav_bar.dart';
+import '../packing_list/packing_list_view.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool showNavBar;
@@ -20,6 +23,23 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserTravels();
+  }
+
+  void _loadUserTravels() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authController = Provider.of<AuthController>(context, listen: false);
+      final travelController = Provider.of<TravelController>(context, listen: false);
+      
+      if (authController.currentUser != null) {
+        travelController.loadUserTravels(authController.currentUser!.id);
+      }
+    });
+  }
 
   void _onNavTap(int index) {
     setState(() {
@@ -65,13 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           
                           const SizedBox(height: 32),
                           
-                          // Travel Destinations Section
-                          _buildTravelDestinations(context),
-                          
-                          const SizedBox(height: 32),
-                          
-                          // Quick Actions Section
-                          _buildQuickActions(context, authController),
+                          // User's Trips Section
+                          _buildUserTrips(context, authController),
                           
                           const SizedBox(height: 24),
                         ],
@@ -152,84 +167,145 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTravelDestinations(BuildContext context) {
-    final destinations = [
-      {
-        'name': 'Paris, France',
-        'image': '🏛️',
-        'description': 'City of Lights',
-        'price': '\$1,200',
-        'rating': 4.8,
-        'color': const Color(0xFF6C5CE7),
-      },
-      {
-        'name': 'Tokyo, Japan',
-        'image': '🗼',
-        'description': 'Modern Metropolis',
-        'price': '\$1,800',
-        'rating': 4.9,
-        'color': const Color(0xFFE17055),
-      },
-      {
-        'name': 'Santorini, Greece',
-        'image': '🏝️',
-        'description': 'Aegean Paradise',
-        'price': '\$900',
-        'rating': 4.7,
-        'color': const Color(0xFF00B894),
-      },
-      {
-        'name': 'New York, USA',
-        'image': '🗽',
-        'description': 'The Big Apple',
-        'price': '\$1,500',
-        'rating': 4.6,
-        'color': const Color(0xFFE84393),
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Explore Destinations',
-            style: TextStyle(
-              fontFamily: 'Pacifico',
-              fontSize: 24,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  color: Colors.black.withOpacity(0.3),
-                  offset: const Offset(0, 2),
-                  blurRadius: 4,
-                ),
-              ],
+  Widget _buildUserTrips(BuildContext context, AuthController authController) {
+    return Consumer<TravelController>(
+      builder: (context, travelController, child) {
+        if (travelController.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 280,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            itemCount: destinations.length,
-            itemBuilder: (context, index) {
-              final destination = destinations[index];
-              return _buildDestinationCard(context, destination);
-            },
-          ),
-        ),
-      ],
+          );
+        }
+
+        if (travelController.error != null) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            child: GlassmorphismCard(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red[300],
+                      size: 48,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading trips',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      travelController.error!,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomButton(
+                      text: 'Retry',
+                      onPressed: () => _loadUserTravels(),
+                      isGlassmorphism: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        final trips = travelController.travels;
+        
+        if (trips.isEmpty) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            child: GlassmorphismCard(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.flight_takeoff,
+                      color: Colors.white.withOpacity(0.7),
+                      size: 48,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No trips yet',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Start planning your first adventure!',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'My Trips',
+                style: TextStyle(
+                  fontFamily: 'Pacifico',
+                  fontSize: 24,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.3),
+                      offset: const Offset(0, 2),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              itemCount: trips.length,
+              itemBuilder: (context, index) {
+                final trip = trips[index];
+                return _buildTripCard(context, trip);
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildDestinationCard(BuildContext context, Map<String, dynamic> destination) {
+  Widget _buildTripCard(BuildContext context, Travel trip) {
+    final statusColor = _getStatusColor(trip);
+    final statusIcon = _getStatusIcon(trip);
+    
     return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 16),
+      margin: const EdgeInsets.only(bottom: 16),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
@@ -240,8 +316,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  destination['color'].withOpacity(0.3),
-                  destination['color'].withOpacity(0.1),
+                  statusColor.withOpacity(0.3),
+                  statusColor.withOpacity(0.1),
                 ],
               ),
               borderRadius: BorderRadius.circular(20),
@@ -250,98 +326,181 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 1,
               ),
             ),
-            child: Stack(
-              children: [
-                // Background Pattern
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: DestinationPatternPainter(destination['color']),
-                  ),
-                ),
-                
-                // Content
-                Padding(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _openPackingList(context, trip),
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Emoji Icon
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Center(
-                          child: Text(
-                            destination['image'],
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                        ),
-                      ),
-                      
-                      const Spacer(),
-                      
-                      // Destination Name
-                      Text(
-                        destination['name'],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 4),
-                      
-                      // Description
-                      Text(
-                        destination['description'],
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 14,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 12),
-                      
-                      // Price and Rating Row
+                      // Header with destination and status
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            destination['price'],
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  trip.destination,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${trip.durationDays} days',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: statusColor.withOpacity(0.5),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  statusIcon,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  trip.statusText,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Trip details
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: Colors.white.withOpacity(0.7),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_formatDate(trip.startDate)} - ${_formatDate(trip.endDate)}',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      if (trip.purpose != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.flag,
+                              color: Colors.white.withOpacity(0.7),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              trip.purpose!.name,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Packing list info and action button
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
                           Row(
                             children: [
                               Icon(
-                                Icons.star,
-                                color: Colors.amber,
+                                Icons.luggage,
+                                color: Colors.white.withOpacity(0.7),
                                 size: 16,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 8),
                               Text(
-                                destination['rating'].toString(),
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                trip.packingLists.isNotEmpty 
+                                    ? '${trip.packingLists.first.packedItems}/${trip.packingLists.first.totalItems} packed'
+                                    : 'No packing list',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'View Packing List',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -349,169 +508,46 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, AuthController authController) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontFamily: 'Pacifico',
-              fontSize: 24,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  color: Colors.black.withOpacity(0.3),
-                  offset: const Offset(0, 2),
-                  blurRadius: 4,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionCard(
-                  context,
-                  'Start New Trip',
-                  Icons.flight_takeoff,
-                  const Color(0xFF6C5CE7),
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Trip creation feature coming soon!'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionCard(
-                  context,
-                  'My Trips',
-                  Icons.luggage,
-                  const Color(0xFFE17055),
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Trips list feature coming soon!'),
-                        backgroundColor: Colors.blue,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  void _openPackingList(BuildContext context, Travel trip) {
+    if (trip.packingLists.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No packing list available for this trip'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
-  Widget _buildActionCard(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  color.withOpacity(0.3),
-                  color.withOpacity(0.1),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PackingListView(
+          travel: trip,
+          packingList: trip.packingLists.first,
         ),
       ),
     );
   }
-}
 
-class DestinationPatternPainter extends CustomPainter {
-  final Color color;
-
-  DestinationPatternPainter(this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withOpacity(0.1)
-      ..style = PaintingStyle.fill;
-
-    // Draw some decorative circles
-    canvas.drawCircle(
-      Offset(size.width * 0.8, size.height * 0.2),
-      size.width * 0.1,
-      paint,
-    );
-    
-    canvas.drawCircle(
-      Offset(size.width * 0.2, size.height * 0.7),
-      size.width * 0.08,
-      paint,
-    );
-    
-    canvas.drawCircle(
-      Offset(size.width * 0.9, size.height * 0.8),
-      size.width * 0.06,
-      paint,
-    );
+  Color _getStatusColor(Travel trip) {
+    if (trip.isUpcoming) return const Color(0xFF6C5CE7);
+    if (trip.isActive) return const Color(0xFF00B894);
+    return const Color(0xFF636E72);
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  IconData _getStatusIcon(Travel trip) {
+    if (trip.isUpcoming) return Icons.schedule;
+    if (trip.isActive) return Icons.flight;
+    return Icons.check_circle;
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
 }
+
+
 
   Widget _buildProfileMenu(BuildContext context, dynamic user) {
     return PopupMenuButton<String>(
@@ -683,3 +719,4 @@ class DestinationPatternPainter extends CustomPainter {
       ),
     );
   }
+

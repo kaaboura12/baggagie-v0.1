@@ -9,8 +9,8 @@ class TripPurpose {
 
   factory TripPurpose.fromJson(Map<String, dynamic> json) {
     return TripPurpose(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
     );
   }
 
